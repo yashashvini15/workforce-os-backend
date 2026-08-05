@@ -7,9 +7,9 @@ import lombok.Setter;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-@Entity
 @Getter
 @Setter
+@Entity
 @Table(name = "users")
 public class User {
 
@@ -20,7 +20,7 @@ public class User {
     @Column(nullable = false)
     private String name;
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     private String password;
 
     @Column(nullable = false,unique = true)
@@ -30,5 +30,7 @@ public class User {
     @Column(nullable = false)
     private Role role=Role.EMPLOYEE;
 
+    @Column(nullable = true)
+    private String authProvider = "GOOGLE";
     private LocalDateTime createdAt = LocalDateTime.now();
 }

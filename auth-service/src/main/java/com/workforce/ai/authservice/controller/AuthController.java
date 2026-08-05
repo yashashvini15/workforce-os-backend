@@ -25,9 +25,4 @@ public class AuthController {
     public AuthResponse login(@RequestBody LoginRequest loginRequest){
         return authService.login(loginRequest);
     }
-
-    @GetMapping("/test-protected")
-    public String testProtected(){
-        return "You are authenticated! JWT filter is working.";
-    }
 }

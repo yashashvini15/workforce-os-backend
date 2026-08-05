@@ -27,6 +27,10 @@ public class AuthService {
             throw new CustomException("Email already Registered, Please login again.");
         }
 
+        if(request.getPassword() == null || request.getPassword().isBlank()){
+            throw new CustomException("Password is required");
+        }
+
         User user = new User();
         user.setName(request.getName());
         user.setEmail(request.getEmail());
