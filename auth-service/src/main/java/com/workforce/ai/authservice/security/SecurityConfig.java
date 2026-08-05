@@ -36,7 +36,9 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable()) //cross site request forgery is disabled
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/signup","/api/auth/login","/oauth2/**","/login/oauth2/**").permitAll()
+                        .requestMatchers("/api/auth/signup", "/api/auth/login",
+                                "/api/auth/forgot-password", "/api/auth/reset-password",
+                                "/oauth2/**", "/login/oauth2/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .oauth2Login(oauth -> oauth
