@@ -20,8 +20,13 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public AuthResponse login(@RequestBody LoginRequest loginRequest){
+    public String login(@RequestBody LoginRequest loginRequest){
         return authService.login(loginRequest);
+    }
+
+    @PostMapping("/verify-otp")
+    public AuthResponse verifyOtp(@RequestBody VerifyOtpRequest request){
+        return authService.verifyLoginOtp(request.getEmail(), request.getOtp());
     }
 
     @PostMapping("/forgot-password")

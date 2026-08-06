@@ -26,6 +26,7 @@ public class AuthService {
     private final JwtUtil jwtUtil;
     private final PasswordResetTokenRepository passwordResetTokenRepository;
     private final EmailService emailService;
+    private final OtpService otpService;
 
     public AuthResponse signup(SignupRequest request){
         if(userRepository.existsByEmail(request.getEmail())){
@@ -46,7 +47,7 @@ public class AuthService {
         return new AuthResponse(token, user.getRole().name());
     }
 
-    public AuthResponse login(LoginRequest request){
+    public String login(LoginRequest request){
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new CustomException("Invalid email or password"));
 
@@ -54,8 +55,8 @@ public class AuthService {
             throw new CustomException("Invalid email or password");
         }
 
-        String token = jwtUtil.generateToken(user.getEmail(), user.getRole().name());
-        return new AuthResponse(token, user.getRole().name());
+        otpService.generateAndSendOtp(user.getEmail());
+        return "OTP sent to your registered email. Please verify to complete login.";
     }
 
     @Transactional
@@ -91,5 +92,16 @@ public class AuthService {
         userRepository.save(user);
 
         passwordResetTokenRepository.deleteByEmail(resetToken.getEmail());
+    }
+
+    @Transactional
+    public AuthResponse verifyLoginOtp(String email, String otp){
+        otpService.verifyOtp(email,otp);
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(()-> new CustomException("User not found"));
+
+        String token = jwtUtil.generateToken(user.getEmail(), user.getRole().name());
+        return new AuthResponse(token,user.getRole().name());
     }
 }
