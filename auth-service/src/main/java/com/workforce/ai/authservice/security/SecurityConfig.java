@@ -39,6 +39,11 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/signup", "/api/auth/login",
                                 "/api/auth/forgot-password", "/api/auth/reset-password",
                                 "/oauth2/**", "/login/oauth2/**","/api/auth/verify-otp").permitAll()
+                        .requestMatchers(
+                                "/v3/api-docs/**",
+                                "/swagger-ui/**",
+                                "/swagger-ui.html"
+                        ).permitAll()
                         .anyRequest().authenticated()
                 )
                 .oauth2Login(oauth -> oauth

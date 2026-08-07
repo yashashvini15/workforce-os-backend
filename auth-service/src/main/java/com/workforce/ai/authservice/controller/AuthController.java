@@ -2,6 +2,7 @@ package com.workforce.ai.authservice.controller;
 
 import com.workforce.ai.authservice.dto.*;
 import com.workforce.ai.authservice.service.AuthService;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -25,8 +26,9 @@ public class AuthController {
     }
 
     @PostMapping("/verify-otp")
-    public AuthResponse verifyOtp(@RequestBody VerifyOtpRequest request){
-        return authService.verifyLoginOtp(request.getEmail(), request.getOtp());
+    public AuthResponse verifyOtp(@RequestBody VerifyOtpRequest request, HttpServletRequest httpRequest){
+        String deviceInfo = httpRequest.getHeader("User-Agent");
+        return authService.verifyLoginOtp(request.getEmail(), request.getOtp(), deviceInfo);
     }
 
     @PostMapping("/forgot-password")

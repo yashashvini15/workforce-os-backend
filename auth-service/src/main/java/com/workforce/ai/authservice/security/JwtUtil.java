@@ -6,6 +6,7 @@ import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import java.security.Key;
 import java.util.Date;
+import java.util.UUID;
 
 @Component
 public class JwtUtil {
@@ -16,18 +17,26 @@ public class JwtUtil {
     @Value("${jwt.expiration}")
     private long expiration;
 
+    String tokenId = UUID.randomUUID().toString();
+
     private Key getKey(){
         return Keys.hmacShaKeyFor(secret.getBytes());
     }
 
     public String generateToken(String email,String role){
         return Jwts.builder()
+                .setId(tokenId)
                 .setSubject(email)
                 .claim("role",role)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis()+expiration))
                 .signWith(getKey(),SignatureAlgorithm.HS256)
                 .compact();
+    }
+
+    public String extractTokenId(String token){
+        return Jwts.parserBuilder().setSigningKey(getKey()).build()
+                .parseClaimsJws(token).getBody().getId();
     }
 
     public String extractRole(String token){
