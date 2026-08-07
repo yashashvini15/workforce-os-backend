@@ -1,5 +1,6 @@
 package com.workforce.ai.authservice.security;
 
+import com.workforce.ai.authservice.service.SessionService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -24,6 +25,9 @@ public class JwtFilter extends OncePerRequestFilter {
     @Autowired
     private JwtUtil jwtUtil;
 
+    @Autowired
+    private SessionService sessionService;
+
     @Override
     protected void doFilterInternal(@NotNull HttpServletRequest request,
                                     @NotNull HttpServletResponse response,
@@ -35,16 +39,28 @@ public class JwtFilter extends OncePerRequestFilter {
 
         if(authHeader != null && authHeader.startsWith("Bearer ")){
             String token = authHeader.substring(7);
+            try{
+                if(jwtUtil.isTokenValid(token)){
+                    String tokenId = jwtUtil.extractTokenId(token);
 
-            if(jwtUtil.isTokenValid(token)){
-                String email = jwtUtil.extractEmail(token);
-                String role = jwtUtil.extractRole(token);
+                    if(sessionService.isSessionValid(tokenId)){
+                        String email = jwtUtil.extractEmail(token);
+                        String role = jwtUtil.extractRole(token);
 
-                List<GrantedAuthority> authorities = Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + role));
+                        String roleName = role.startsWith("ROLE_") ? role : "ROLE_" + role;
+                        List<GrantedAuthority> authorities =
+                                Collections.singletonList(new SimpleGrantedAuthority(roleName));
 
-                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(email,null, authorities);
-                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authToken);
+                        UsernamePasswordAuthenticationToken authenticationToken =
+                                new UsernamePasswordAuthenticationToken(email,null,authorities);
+
+                        authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+
+                        SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+                    }
+                }
+            }catch (Exception e){
+                System.out.println("JWT ERROR: "+e.getMessage());
             }
         }
         filterChain.doFilter(request,response);

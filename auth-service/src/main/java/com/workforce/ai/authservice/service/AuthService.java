@@ -27,6 +27,7 @@ public class AuthService {
     private final PasswordResetTokenRepository passwordResetTokenRepository;
     private final EmailService emailService;
     private final OtpService otpService;
+    private final SessionService sessionService;
 
     public AuthResponse signup(SignupRequest request){
         if(userRepository.existsByEmail(request.getEmail())){
@@ -95,13 +96,16 @@ public class AuthService {
     }
 
     @Transactional
-    public AuthResponse verifyLoginOtp(String email, String otp){
+    public AuthResponse verifyLoginOtp(String email, String otp,String deviceInfo){
         otpService.verifyOtp(email,otp);
 
         User user = userRepository.findByEmail(email)
                 .orElseThrow(()-> new CustomException("User not found"));
 
         String token = jwtUtil.generateToken(user.getEmail(), user.getRole().name());
+        String tokenId = jwtUtil.extractTokenId(token);
+
+        sessionService.createSession(user.getEmail(),tokenId , deviceInfo , LocalDateTime.now().plusHours(24));
         return new AuthResponse(token,user.getRole().name());
     }
 }
