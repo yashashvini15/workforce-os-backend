@@ -3,8 +3,10 @@ package com.workforce.ai.authservice.controller;
 import com.workforce.ai.authservice.dto.SessionResponse;
 import com.workforce.ai.authservice.dto.UpdateRoleRequest;
 import com.workforce.ai.authservice.dto.UserResponse;
+import com.workforce.ai.authservice.security.JwtUtil;
 import com.workforce.ai.authservice.service.SessionService;
 import com.workforce.ai.authservice.service.UserService;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -21,9 +23,13 @@ public class UserController {
 
     @Autowired
     private SessionService sessionService;
+    @Autowired
+    private JwtUtil jwtUtil;
 
-    public UserController(UserService userService){
-        this.userService=userService;
+    public UserController(UserService userService, SessionService sessionService, JwtUtil jwtUtil) {
+        this.userService = userService;
+        this.sessionService = sessionService;
+        this.jwtUtil = jwtUtil;
     }
 
     @GetMapping("/profile")
@@ -47,6 +53,15 @@ public class UserController {
     @GetMapping("/sessions")
     public List<SessionResponse> getMySessions(Authentication authentication){
         return sessionService.getActiveSessions(authentication.getName());
+    }
+
+    @DeleteMapping("/sessions/logout")
+    public String logoutCurrentDevice(HttpServletRequest request){
+        String authHeader = request.getHeader("Authorization");
+        String token = authHeader.substring(7);
+        String tokenId = jwtUtil.extractTokenId(token);
+        sessionService.logoutSingleSession(tokenId);
+        return "Logged out from this device successfully.";
     }
 
     @DeleteMapping("/sessions/logout-all")
