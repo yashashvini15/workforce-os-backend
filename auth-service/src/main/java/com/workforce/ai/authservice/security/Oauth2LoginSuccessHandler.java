@@ -3,6 +3,7 @@ package com.workforce.ai.authservice.security;
 import com.workforce.ai.authservice.entity.Role;
 import com.workforce.ai.authservice.entity.User;
 import com.workforce.ai.authservice.repository.UserRepository;
+import com.workforce.ai.authservice.service.SessionService;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -13,12 +14,16 @@ import org.springframework.security.web.authentication.AuthenticationSuccessHand
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 
 @Component
 public class Oauth2LoginSuccessHandler implements AuthenticationSuccessHandler {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private SessionService sessionService;
 
     @Autowired
     private JwtUtil jwtUtil;
@@ -44,6 +49,10 @@ public class Oauth2LoginSuccessHandler implements AuthenticationSuccessHandler {
         );
 
         String token = jwtUtil.generateToken(user.getEmail(), user.getRole().name());
+
+        String tokenId = jwtUtil.extractTokenId(token);
+        sessionService.createSession(user.getEmail(), tokenId, "OAuth-Google-Login",
+                LocalDateTime.now().plusHours(24));
 
         response.getWriter().write("Google Login Successful. Token: " + token);
         //replace placeholder url with actual url
