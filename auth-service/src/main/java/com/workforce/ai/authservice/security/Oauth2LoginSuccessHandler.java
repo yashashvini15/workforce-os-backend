@@ -45,7 +45,7 @@ public class Oauth2LoginSuccessHandler implements AuthenticationSuccessHandler {
 
         String token = jwtUtil.generateToken(user.getEmail(), user.getRole().name());
 
-        response.sendRedirect("http://localhost:3000/oauth-success?token=" + token);
+        response.getWriter().write("Google Login Successful. Token: " + token);
         //replace placeholder url with actual url
     }
 }
