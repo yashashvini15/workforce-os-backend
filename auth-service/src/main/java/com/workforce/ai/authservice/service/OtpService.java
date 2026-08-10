@@ -4,8 +4,6 @@ import com.workforce.ai.authservice.entity.OtpToken;
 import com.workforce.ai.authservice.exception.CustomException;
 import com.workforce.ai.authservice.repository.OtpTokenRepository;
 import lombok.AllArgsConstructor;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,7 +14,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class OtpService {
     private final OtpTokenRepository otpTokenRepository;
-    private final JavaMailSender mailSender;
+    private final EmailService emailService;
 
     @Transactional
     public void generateAndSendOtp(String email){
@@ -43,11 +41,22 @@ public class OtpService {
         otpTokenRepository.deleteByEmail(email);
     }
 
-    private void sendOtpEmail(String toEmail,String otp){
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setTo(toEmail);
-        message.setSubject("Your Login OTP - AI Workforce OS");
-        message.setText("Your OTP for login is: "+otp+"\n\nThis OTP will expire in 5 minutes.");
-        mailSender.send(message);
+    private void sendOtpEmail(String toEmail, String otp) {
+
+        String body =
+                "Hello,\n\n" +
+                        "Your AI Workforce OS verification code is:\n\n" +
+                        otp +
+                        "\n\n" +
+                        "This OTP will expire in 5 minutes.\n\n" +
+                        "If you did not request this code, please ignore this email.\n\n" +
+                        "Regards,\n" +
+                        "AI Workforce OS";
+
+        emailService.sendEmail(
+                toEmail,
+                "Your Login OTP - AI Workforce OS",
+                body
+        );
     }
 }
