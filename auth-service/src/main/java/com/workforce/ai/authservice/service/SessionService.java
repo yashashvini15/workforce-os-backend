@@ -17,6 +17,10 @@ public class SessionService {
 
     @Transactional
     public void createSession(String email, String tokenId, String deviceInfo, LocalDateTime expiryTime){
+        if(userSessionRepository.findByTokenId(tokenId).isPresent()){
+            return;
+        }
+
         UserSessions sessions = new UserSessions(email,tokenId,deviceInfo,LocalDateTime.now(),expiryTime);
         userSessionRepository.save(sessions);
     }
