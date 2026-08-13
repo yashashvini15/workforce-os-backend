@@ -26,6 +26,10 @@ public class User {
     @Column(nullable = false,unique = true)
     private String email;
 
+    @ManyToOne
+    @JoinColumn(name = "team_id")
+    private Team team;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Role role=Role.EMPLOYEE;
