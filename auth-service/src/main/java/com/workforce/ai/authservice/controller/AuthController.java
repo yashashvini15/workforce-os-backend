@@ -16,7 +16,7 @@ public class AuthController {
     }
 
     @PostMapping("/signup")
-    public AuthResponse signup(@RequestBody SignupRequest signupRequest){
+    public String signup(@RequestBody SignupRequest signupRequest){
         return authService.signup(signupRequest);
     }
 

@@ -29,7 +29,7 @@ public class AuthService {
     private final OtpService otpService;
     private final SessionService sessionService;
 
-    public AuthResponse signup(SignupRequest request){
+    public String signup(SignupRequest request){
         if(userRepository.existsByEmail(request.getEmail())){
             throw new CustomException("Email already Registered, Please login again.");
         }
@@ -44,8 +44,8 @@ public class AuthService {
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         userRepository.save(user);
 
-        String token = jwtUtil.generateToken(user.getEmail(), user.getRole().name());
-        return new AuthResponse(token, user.getRole().name());
+        otpService.generateAndSendOtp(user.getEmail());
+        return "OTP sent to your registered email. Please verify to complete signup.";
     }
 
     public String login(LoginRequest request){
