@@ -61,7 +61,7 @@ public class Oauth2LoginSuccessHandler implements AuthenticationSuccessHandler {
         sessionService.createSession(user.getEmail(), tokenId, "OAuth-Google-Login",
                 LocalDateTime.now().plusHours(24));
 
-        String redirectUrl = UriComponentsBuilder.fromUriString(frontendUrl + "/oauth-success")
+        String redirectUrl = UriComponentsBuilder.fromUriString(frontendUrl)
                 .queryParam("token", URLEncoder.encode(token, StandardCharsets.UTF_8))
                 .queryParam("role",user.getRole().name())
                 .build().toUriString();
