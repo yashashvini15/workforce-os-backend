@@ -8,12 +8,16 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 
 @Component
@@ -27,6 +31,9 @@ public class Oauth2LoginSuccessHandler implements AuthenticationSuccessHandler {
 
     @Autowired
     private JwtUtil jwtUtil;
+
+    @Value("${app.frontend-url}")
+    private String frontendUrl;
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request,
@@ -54,7 +61,12 @@ public class Oauth2LoginSuccessHandler implements AuthenticationSuccessHandler {
         sessionService.createSession(user.getEmail(), tokenId, "OAuth-Google-Login",
                 LocalDateTime.now().plusHours(24));
 
-        response.getWriter().write("Google Login Successful. Token: " + token);
-        //replace placeholder url with actual url
+        String redirectUrl = UriComponentsBuilder.fromUriString(frontendUrl + "/oauth-success")
+                .queryParam("token", URLEncoder.encode(token, StandardCharsets.UTF_8))
+                .queryParam("role",user.getRole().name())
+                .build().toUriString();
+
+//        System.out.println(redirectUrl);
+        response.sendRedirect(redirectUrl);
     }
 }
