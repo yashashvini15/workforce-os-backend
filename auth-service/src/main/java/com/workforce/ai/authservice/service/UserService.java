@@ -32,15 +32,26 @@ public class UserService {
                 .toList();
     }
 
-    public UserResponse updateUserRole(UUID userId, String newRole){
+    public UserResponse updateUserRole(UUID userId, String newRole,String requesterEmail){
         User user = userRepository.findById(userId)
                 .orElseThrow(()->new CustomException("User Not Found"));
+
+        if(user.getEmail().equalsIgnoreCase(requesterEmail)){
+            throw new CustomException("You cannot change your own role");
+        }
 
         Role role;
         try{
             role = Role.valueOf(newRole.toUpperCase());
         }catch (IllegalArgumentException e){
             throw new CustomException("Invalid role: "+newRole);
+        }
+
+        if(user.getRole() == Role.SUPER_ADMIN && role != Role.SUPER_ADMIN){
+            long superAdminCount = userRepository.countByRole(Role.SUPER_ADMIN);
+            if(superAdminCount <= 1){
+                throw new CustomException("Cannot demote the last SUPER_ADMIN");
+            }
         }
 
         user.setRole(role);

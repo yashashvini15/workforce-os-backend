@@ -46,8 +46,8 @@ public class UserController {
 
     @PreAuthorize("hasAnyRole('SUPER_ADMIN')")
     @PutMapping("/{id}/role")
-    public UserResponse updateUserRole(@PathVariable UUID id, @RequestBody UpdateRoleRequest request){
-        return userService.updateUserRole(id,request.getRole());
+    public UserResponse updateUserRole(@PathVariable UUID id, @RequestBody UpdateRoleRequest request , Authentication authentication){
+        return userService.updateUserRole(id,request.getRole(),authentication.getName());
     }
 
     @GetMapping("/sessions")
