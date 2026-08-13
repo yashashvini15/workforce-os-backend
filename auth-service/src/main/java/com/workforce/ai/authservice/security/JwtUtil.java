@@ -17,13 +17,15 @@ public class JwtUtil {
     @Value("${jwt.expiration}")
     private long expiration;
 
-    String tokenId = UUID.randomUUID().toString();
-
     private Key getKey(){
         return Keys.hmacShaKeyFor(secret.getBytes());
     }
 
     public String generateToken(String email,String role){
+
+
+        String tokenId = UUID.randomUUID().toString();
+
         return Jwts.builder()
                 .setId(tokenId)
                 .setSubject(email)
