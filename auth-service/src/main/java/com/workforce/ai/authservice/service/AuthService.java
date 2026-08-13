@@ -93,6 +93,8 @@ public class AuthService {
         userRepository.save(user);
 
         passwordResetTokenRepository.deleteByEmail(resetToken.getEmail());
+
+        sessionService.logoutAllDevices(user.getEmail());
     }
 
     @Transactional
