@@ -104,7 +104,7 @@ public class AuthService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(()-> new CustomException("User not found"));
 
-        String token = jwtUtil.generateToken(user.getEmail(), user.getRole().name());
+        String token = jwtUtil.generateToken(user.getEmail(),user.getId(), user.getRole().name());
         String tokenId = jwtUtil.extractTokenId(token);
 
         sessionService.createSession(user.getEmail(),tokenId , deviceInfo , LocalDateTime.now().plusHours(24));

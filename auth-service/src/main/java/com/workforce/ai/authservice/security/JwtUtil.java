@@ -21,7 +21,7 @@ public class JwtUtil {
         return Keys.hmacShaKeyFor(secret.getBytes());
     }
 
-    public String generateToken(String email,String role){
+    public String generateToken(String email,UUID userId,String role){
 
 
         String tokenId = UUID.randomUUID().toString();
@@ -29,6 +29,7 @@ public class JwtUtil {
         return Jwts.builder()
                 .setId(tokenId)
                 .setSubject(email)
+                .claim("userId", userId.toString())
                 .claim("role",role)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis()+expiration))

@@ -55,7 +55,7 @@ public class Oauth2LoginSuccessHandler implements AuthenticationSuccessHandler {
             }
         );
 
-        String token = jwtUtil.generateToken(user.getEmail(), user.getRole().name());
+        String token = jwtUtil.generateToken(user.getEmail(), user.getId(),user.getRole().name());
 
         String tokenId = jwtUtil.extractTokenId(token);
         sessionService.createSession(user.getEmail(), tokenId, "OAuth-Google-Login",
