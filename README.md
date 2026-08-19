@@ -1,143 +1,423 @@
-# AI Workforce OS — Auth Service
+# AI Workforce OS — Backend
 
-Backend authentication microservice for AI Workforce OS. Built with **Java Spring Boot 4.1.0**, **PostgreSQL (Supabase)**, **JWT**, and **OAuth2 (Google)**. Deployed on **Railway**.
+Backend platform for **AI Workforce OS**, built using a microservice architecture with **Java, Spring Boot, PostgreSQL, JWT, OAuth2, and REST APIs**.
+
+The backend currently provides **Authentication, User Management, Organization Management, and Attendance Management**, with additional workforce services planned for future development.
 
 ---
 
-## 1. Live URLs
+## 🏗️ Architecture
+
+```text
+                              AI Workforce OS
+                                     │
+                                     ▼
+                          ┌─────────────────────┐
+                          │     Frontend App    │
+                          └──────────┬──────────┘
+                                     │
+                    ┌────────────────┴────────────────┐
+                    │                                 │
+                    ▼                                 ▼
+           ┌─────────────────────┐          ┌─────────────────────┐
+           │     Auth Service    │          │ Attendance Service  │
+           │       ✅ Live       │          │       ✅ Live       │
+           │                     │          │                     │
+           │ • Authentication    │          │ • Check-in/out      │
+           │ • User Management   │          │ • Geofencing        │
+           │ • Organization Mgmt │          │ • Wi-Fi Validation  │
+           │ • JWT / OTP / MFA   │          │ • Attendance History│
+           │ • Google OAuth2     │          │ • Corrections       │
+           │ • RBAC & Sessions   │          │ • Late Detection    │
+           └──────────┬──────────┘          └──────────┬──────────┘
+                      │                                │
+                      └────────────── JWT ─────────────┘
+                                     │
+                                     ▼
+                                PostgreSQL
+
+
+                     🔜 FUTURE WORKFORCE SERVICES
+                                     │
+              ┌──────────────────────┼──────────────────────┐
+              │                      │                      │
+              ▼                      ▼                      ▼
+     ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+     │ Leave Management│    │ Payroll Service │    │ Notification    │
+     │    🔜 Planned   │    │    🔜 Planned   │    │    🔜 Planned   │
+     └─────────────────┘    └─────────────────┘    └─────────────────┘
+              │                      │                      │
+              └──────────────────────┼──────────────────────┘
+                                     │
+                                     ▼
+                           ┌─────────────────────┐
+                           │ Reporting &         │
+                           │ Analytics            │
+                           │ 🔜 Planned           │
+                           └─────────────────────┘
+```
+
+---
+
+## 📦 Services
+
+### Currently Available
+
+| Service | Status | Description |
+|---|---|---|
+| **Auth Service** | ✅ Completed | Authentication, user management, organization management, JWT, OTP/MFA, Google OAuth2, RBAC and session management |
+| **Attendance Service** | ✅ Completed | Check-in/out, geofencing, Wi-Fi validation, attendance history, late detection and correction workflows |
+
+### Future Services
+
+| Service | Status | Description |
+|---|---|---|
+| **Leave Management** | 🔜 Planned | Employee leave requests, approvals and leave tracking |
+| **Payroll Management** | 🔜 Planned | Payroll processing and employee compensation management |
+| **Notifications** | 🔜 Planned | Workforce-related email and system notifications |
+| **Reporting & Analytics** | 🔜 Planned | Workforce reports, dashboards and analytics |
+
+> **Legend:** ✅ Completed &nbsp;&nbsp; 🔄 In Progress &nbsp;&nbsp; 🔜 Planned for Future
+
+---
+
+# 🔐 Auth Service
+
+The Auth Service is the central identity and access-management service for AI Workforce OS.
+
+It handles **authentication, user management, organization management, authorization, and session management**. Organization functionality includes **departments, teams, team assignment, and manager team visibility**. :contentReference[oaicite:1]{index=1}
+
+### Key Features
+
+- Signup & Login
+- JWT Authentication
+- Email OTP / MFA
+- Google OAuth2
+- Password Reset
+- User Management
+- Role-Based Access Control
+- Multi-device Session Management
+- Logout / Logout All Devices
+- Organization Management
+- Department Management
+- Team Management
+- User-to-Team Assignment
+- Manager Team Visibility
+
+### Live URLs
 
 | Purpose | URL |
 |---|---|
-| Base API URL | `https://workforce-os-backend-production.up.railway.app` |
-| Swagger UI (API docs + testing) | `https://workforce-os-backend-production.up.railway.app/swagger-ui/index.html` |
-| Google Login (OAuth2) | `https://workforce-os-backend-production.up.railway.app/oauth2/authorization/google` |
+| Base API | `https://workforce-os-backend-production.up.railway.app` |
+| Swagger UI | `https://workforce-os-backend-production.up.railway.app/swagger-ui/index.html` |
+| Google Login | `https://workforce-os-backend-production.up.railway.app/oauth2/authorization/google` |
 
----
+### Authentication Flow
 
-## 2. Current Status
-
-| Feature | Status |
-|---|---|
-| Signup / Login (JWT + Email OTP MFA) | ✅ Done |
-| OAuth2 Google Login | ✅ Done |
-| Password Reset (Email link) | ✅ Done |
-| Role-Based Access Control (RBAC) | ✅ Done |
-| Session Management (multi-device, logout) | ✅ Done |
-| Swagger API Documentation | ✅ Done |
-| Deployed to Railway | ✅ Done |
-| Organization Management (Teams/Departments) | 🔄 In Progress |
-| Attendance Service | ⏳ Not Started |
-
----
-
-## 3. Authentication Flows
-
-### Flow A — Email + Password (with OTP MFA)
-```
-1. POST /api/auth/signup            → create account
-2. POST /api/auth/login              → validates email+password, sends OTP to email
-3. POST /api/auth/verify-otp         → validates OTP, returns JWT token
+```text
+Email + Password
+      │
+      ▼
+    Login
+      │
+      ▼
+  Email OTP
+      │
+      ▼
+ Verify OTP
+      │
+      ▼
+  JWT Token
 ```
 
-### Flow B — Google OAuth2 (no OTP needed)
-```
-1. Open in browser: GET /oauth2/authorization/google
-2. Login with Google account, click Allow
-3. Page returns: {"token": "eyJhbGci..."}  (temporary — normally would redirect to frontend)
-```
+Google OAuth2 can also be used to obtain a JWT token.
 
-Use the token from either flow as:
-```
+Use the token for protected APIs:
+
+```http
 Authorization: Bearer <token>
 ```
 
+### User Management Endpoints
+
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/api/users/profile` | Get current user profile |
+| GET | `/api/users` | Get all users |
+| PUT | `/api/users/{id}/role` | Update user role |
+| GET | `/api/users/sessions` | Get active sessions |
+| DELETE | `/api/users/sessions/logout` | Logout current device |
+| DELETE | `/api/users/sessions/logout-all` | Logout all devices |
+
+### Organization Management Endpoints
+
+| Method | Endpoint | Access | Description |
+|---|---|---|---|
+| POST | `/api/organization/departments` | HR_ADMIN / SUPER_ADMIN | Create department |
+| GET | `/api/organization/departments` | HR_ADMIN / SUPER_ADMIN / MANAGER | Get all departments |
+| POST | `/api/organization/teams` | HR_ADMIN / SUPER_ADMIN | Create team |
+| GET | `/api/organization/teams` | HR_ADMIN / SUPER_ADMIN / MANAGER | Get all teams |
+| PUT | `/api/organization/users/{userId}/assign-team/{teamId}` | HR_ADMIN / SUPER_ADMIN | Assign user to team |
+| GET | `/api/organization/my-team` | MANAGER | Get manager's team members |
+
+### Authentication Endpoints
+
+| Method | Endpoint | Description |
+|---|---|---|
+| POST | `/api/auth/signup` | Create account |
+| POST | `/api/auth/login` | Login & send OTP |
+| POST | `/api/auth/verify-otp` | Verify OTP & receive JWT |
+| GET | `/oauth2/authorization/google` | Google OAuth2 login |
+| POST | `/api/auth/forgot-password` | Request password reset |
+| POST | `/api/auth/reset-password` | Reset password |
+
 ---
 
-## 4. How to Test via Swagger (Step by Step)
+# 🕐 Attendance Service
 
-1. Get a token using **either** Flow A or Flow B above.
-2. Open Swagger UI: `https://workforce-os-backend-production.up.railway.app/swagger-ui/index.html`
-3. Click the **"Authorize"** button (top right, lock icon).
-4. Paste the raw token (no `Bearer ` prefix — Swagger adds it automatically).
-5. Click **Authorize**, then **Close**.
-6. Expand any protected endpoint (e.g. `GET /api/users/profile`) → **Try it out** → **Execute**.
+The Attendance Service manages employee attendance and attendance correction workflows.
 
-⚠️ **Important**: Every login (OAuth or OTP) issues a **new token** and creates a **new session**. If you re-authorize with an old token after logging out or after a new login replaced it, you'll get `401 Unauthorized`. Always use the most recent token.
+### Key Features
 
----
+- Employee Check-in / Check-out
+- Office Geofencing
+- Office Wi-Fi Validation
+- Late Attendance Detection
+- Attendance History
+- Date-range Attendance History
+- Attendance Correction Requests
+- Manager/Admin Correction Approval & Rejection
+- JWT Authentication & RBAC
+- Optimistic Locking for Correction Workflow
 
-## 5. Error Response Format
+### Live URLs
 
-```json
-{ "message": "Human-readable error description", "status": 400 }
+| Purpose | URL |
+|---|---|
+| Base API | `https://attendance-service-production.up.railway.app` |
+| Swagger UI | `https://attendance-service-production-e73b.up.railway.app/swagger-ui/index.html` |
+
+### Key Endpoints
+
+| Method | Endpoint | Access | Description |
+|---|---|---|---|
+| POST | `/api/attendance/check-in` | Authenticated | Mark check-in |
+| POST | `/api/attendance/check-out` | Authenticated | Mark check-out |
+| GET | `/api/attendance/my-history` | Authenticated | Get attendance history |
+| GET | `/api/attendance/my-history/range` | Authenticated | Get history by date range |
+| POST | `/api/attendance/corrections/{attendanceId}` | Authenticated | Submit correction |
+| GET | `/api/attendance/corrections/my-requests` | Authenticated | Get own correction requests |
+| GET | `/api/attendance/corrections/pending` | Manager/Admin | Get pending corrections |
+| PUT | `/api/attendance/corrections/{requestId}/approve` | Manager/Admin | Approve correction |
+| PUT | `/api/attendance/corrections/{requestId}/reject` | Manager/Admin | Reject correction |
+
+Attendance APIs use the **same JWT token issued by the Auth Service**.
+
+```http
+Authorization: Bearer <token>
+```
+
+### Attendance Workflow
+
+```text
+Employee
+   │
+   ▼
+Check-In
+   │
+   ├── Location Validation
+   ├── Wi-Fi Validation
+   └── Late Detection
+   │
+   ▼
+Attendance Record
+   │
+   ▼
+Check-Out
+```
+
+### Correction Workflow
+
+```text
+Employee
+   │
+   ▼
+Submit Correction
+   │
+   ▼
+Pending Request
+   │
+   ├───────────────┐
+   ▼               ▼
+Approve           Reject
+   │
+   ▼
+Attendance Updated
 ```
 
 ---
 
-## 6. Roles
+# 👥 Roles
 
 | Role | Description |
 |---|---|
-| `EMPLOYEE` | Default role on signup |
-| `MANAGER` | Can view their team (once Org module is live) |
-| `HR_ADMIN` | Can view/manage all users |
-| `LEADERSHIP` | Organization-wide visibility (future use) |
-| `SUPER_ADMIN` | Full access, can assign roles |
-
-To make a user `SUPER_ADMIN` (first-time bootstrap), manually edit the `role` column in Supabase's Table Editor for the `users` table.
+| `EMPLOYEE` | Standard employee access |
+| `MANAGER` | Team visibility and attendance correction management |
+| `HR_ADMIN` | User, organization and attendance administration |
+| `LEADERSHIP` | Organization-wide visibility |
+| `SUPER_ADMIN` | Full administrative access |
 
 ---
 
-## 7. Key Endpoints
+# 🛠️ Tech Stack
 
-| Method | Endpoint | Auth Required | Notes |
-|---|---|---|---|
-| POST | `/api/auth/signup` | No | |
-| POST | `/api/auth/login` | No | Sends OTP |
-| POST | `/api/auth/verify-otp` | No | Returns JWT |
-| GET | `/oauth2/authorization/google` | No | Browser only |
-| POST | `/api/auth/forgot-password` | No | |
-| POST | `/api/auth/reset-password` | No | |
-| GET | `/api/users/profile` | Yes | Any authenticated user |
-| GET | `/api/users` | Yes | HR_ADMIN / SUPER_ADMIN only |
-| PUT | `/api/users/{id}/role` | Yes | SUPER_ADMIN only |
-| GET | `/api/users/sessions` | Yes | List active sessions |
-| DELETE | `/api/users/sessions/logout` | Yes | Logout current device |
-| DELETE | `/api/users/sessions/logout-all` | Yes | Logout all devices |
-
-Full request/response schemas: see Swagger UI.
+| Category | Technologies |
+|---|---|
+| Language | Java 17 |
+| Framework | Spring Boot 4.1.0 |
+| Security | Spring Security, JWT, OAuth2 |
+| Database | PostgreSQL |
+| Persistence | Spring Data JPA, Hibernate |
+| Validation | Jakarta Validation |
+| API | REST, OpenAPI / Swagger |
+| Build | Maven |
+| Deployment | Railway |
+| Repository | GitHub |
 
 ---
 
-## 8. Known Issues / Things to Watch
+# 🚀 Local Setup
 
-- **Token vs Session mismatch**: If a token passes JWT signature validation but session was deleted (via logout), API calls return `401`. This is expected — get a fresh token.
-- **OAuth without a frontend**: Currently the OAuth success handler returns the JWT as plain text on-screen (`Google Login Successful. Token: ...`) instead of redirecting to a frontend app, since no frontend exists yet. This will change once frontend integration begins — the handler will redirect to `app.frontend-url` with the token as a query param instead.
-- **Mixed content (HTTP vs HTTPS)**: Swagger's OpenAPI config explicitly sets the server URL to `https://` to avoid browser-blocked "mixed content" errors on Railway. If Swagger ever shows `http://` in the generated cURL command, check `OpenApiConfig.java`'s `.addServersItem(...)`.
-- **Email sending**: Uses Gmail SMTP with an App Password (not the regular Gmail password). If OTP/password-reset emails stop arriving, check that 2-Step Verification and the App Password are still active on the sender Gmail account, and that `MAIL_USERNAME` / `MAIL_PASSWORD` env vars are correctly set on Railway.
+## Prerequisites
 
----
+- Java 17+
+- Maven
+- PostgreSQL
+- Git
 
-## 9. Environment Variables (set in Railway → Variables)
-
-```
-DB_PASSWORD=<supabase-db-password>
-MAIL_USERNAME=<system-gmail-address>
-MAIL_PASSWORD=<gmail-app-password>
-GOOGLE_CLIENT_ID=<google-oauth-client-id>
-GOOGLE_CLIENT_SECRET=<google-oauth-client-secret>
-app.frontend-url=<placeholder-until-frontend-exists>
-```
-
----
-
-## 10. Local Setup (For New Developers)
+## Clone Repository
 
 ```bash
-git clone <repo-url>
-cd workforce-os-backend/auth-service
+git clone https://github.com/yashashvini15/workforce-os-backend.git
+cd workforce-os-backend
+```
+
+## Auth Service
+
+```bash
+cd auth-service
 mvn clean install
 mvn spring-boot:run
 ```
 
-Server starts on port `8081` locally. Set the same environment variables listed above in your IntelliJ Run Configuration.
+Runs on:
+
+```text
+http://localhost:8081
+```
+
+## Attendance Service
+
+```bash
+cd attendance-service
+mvn clean install
+mvn spring-boot:run
+```
+
+Runs on:
+
+```text
+http://localhost:8082
+```
+
+Configure database credentials, JWT/OAuth credentials and attendance configuration through environment variables.
+
+---
+
+# ☁️ Deployment
+
+Both implemented services are independently deployed on **Railway**.
+
+```text
+                         GitHub
+                            │
+                 ┌──────────┴──────────┐
+                 │                     │
+                 ▼                     ▼
+          Auth Service          Attendance Service
+                 │                     │
+                 ▼                     ▼
+             Railway               Railway
+                 │                     │
+                 └──────────┬──────────┘
+                            │
+                            ▼
+                       PostgreSQL
+```
+
+Each service can be developed and deployed independently while using the common JWT-based authentication mechanism.
+
+---
+
+# 📚 API Documentation
+
+Interactive Swagger documentation is available for both services.
+
+### Auth Service
+
+`https://workforce-os-backend-production.up.railway.app/swagger-ui/index.html`
+
+### Attendance Service
+
+`https://attendance-service-production-e73b.up.railway.app/swagger-ui/index.html`
+
+Swagger can be used to:
+
+- View available endpoints
+- View request/response schemas
+- Authorize using JWT
+- Execute API requests
+- Test protected endpoints
+
+---
+
+# 📌 Project Status
+
+### Completed
+
+- ✅ Authentication & Authorization
+- ✅ JWT Authentication
+- ✅ Email OTP / MFA
+- ✅ Google OAuth2
+- ✅ Password Reset
+- ✅ User Management
+- ✅ Role-Based Access Control
+- ✅ Session Management
+- ✅ Organization Management
+- ✅ Department Management
+- ✅ Team Management
+- ✅ Attendance Management
+- ✅ Geofencing
+- ✅ Wi-Fi Validation
+- ✅ Attendance Corrections
+
+### Planned for Future
+
+- 🔜 Leave Management
+- 🔜 Payroll Management
+- 🔜 Notifications
+- 🔜 Reporting & Analytics
+
+---
+
+## 👩‍💻 Author
+
+**Yashashwi Soni**
+
+Java • Spring Boot • Microservices • Backend Development
+
+---
+
+## 📄 License
+
+This project is currently maintained as part of the **AI Workforce OS** development project.
