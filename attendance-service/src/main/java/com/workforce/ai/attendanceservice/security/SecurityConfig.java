@@ -39,7 +39,8 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource(){
         CorsConfiguration corsConfiguration = new CorsConfiguration();
         corsConfiguration.setAllowedOriginPatterns(List.of("http://localhost:*",
-                "https://workforce-os-backend-production.up.railway.app"));
+                "https://workforce-os-backend-production.up.railway.app",
+                "https://*.vercel.app"));
         corsConfiguration.setAllowedMethods(List.of("GET","POST","PUT","DELETE","OPTIONS"));
         corsConfiguration.setAllowedHeaders(List.of("*"));
         corsConfiguration.setAllowCredentials(true);
